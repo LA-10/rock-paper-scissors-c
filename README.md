@@ -1,6 +1,8 @@
 # Rock-Paper-Scissors (C Terminal Version)
 
 ![C99 Badge](https://img.shields.io/badge/C-Standard%20C99-blue)
+![Version](https://img.shields.io/badge/version-v1.5-blue.svg)
+![Status](https://img.shields.io/badge/status-released-brightgreen)
 
 ---
 
