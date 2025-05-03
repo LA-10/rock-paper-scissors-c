@@ -1,4 +1,4 @@
-# 🪨 Rock Paper Scissors - C Version ![version](https://img.shields.io/badge/version-1.7-blue) ![release](https://img.shields.io/github/v/release/LA-10/rock-paper-scissors-c?label=release)
+# 🪨 Rock Paper Scissors - C Version ![version](https://img.shields.io/badge/version-1.7-blue) 
 
 A terminal-based Rock-Paper-Scissors game written in clean, modular C99. Designed for simplicity, learning, and extensibility.
 
@@ -84,6 +84,6 @@ This project is licensed under the MIT License. See the [LICENSE](./LICENSE) fil
 
 ---
 
-## 🧕‍♂️ Contributing
+##  Contributing
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) if you'd like to suggest changes, improvements, or report bugs. Beginners welcome!
