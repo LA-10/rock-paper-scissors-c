@@ -3,7 +3,9 @@
 #include <stdio.h>
 #include <string.h> 
 #include <time.h>
+#include <stdbool.h>
 #include "players.h"
+#include "game.h"
 
 /*
     How to play the game:
@@ -16,6 +18,8 @@
 int user_points = 0;
 int computer_points = 0;
 int round_number = 1;
+
+char *name;
 
 // Input Utilities
 char read_stdin(void) {
@@ -50,21 +54,95 @@ void print_ascii_screen(const char *filepath, const char *subtitle) {
     }
 }
 
-// Startup name prompt
-char *intro(void) {
-    print_ascii_screen("assets/splash.txt", "Welcome to the simple Rock-Paper-Scissors Game!\n");
-    int max_len = 1;
-    char *name = malloc(sizeof(char) * max_len);
-    if (!name) {
-        printf("Memory allocation failed.\n");
-        exit(EXIT_FAILURE);
+// Loads the saved username into the global `name` buffer.
+// Returns true on success, false otherwise.
+static bool load_saved_username(void) {
+    FILE *username_file = fopen("save/username.txt", "r");
+    if (!username_file) {
+        perror("fopen");
+        return false;
     }
+
+    char buffer[MAX_NAME_SIZE];
+    if (!fgets(buffer, sizeof(buffer), username_file)) {
+        printf("Could not read username.\n");
+        fclose(username_file);
+        return false;
+    }
+
+    buffer[strcspn(buffer, "\n")] = '\0';  // remove newline
+
+    if (strlen(buffer) + 1 > MAX_NAME_SIZE) {
+        printf("Username is too long.\n");
+        fclose(username_file);
+        return false;
+    }
+
+    strcpy(name, buffer);  // safe copy into pre-allocated buffer
+
+    fclose(username_file);
+    return true;
+}
+
+// Prompts the user for a new username, saves it, and resets game history.
+// Returns true on success.
+static bool reset_game(void) {
+    remove("save/username.txt");
+    remove("save/game_history.txt");
+
     int rename_tries = 0;
     printf("Write your name: ");
-    read_str(rename_tries, name, max_len);
+    read_str(rename_tries, name, MAX_NAME_SIZE);
+
     printf("Welcome %s to the game! Let's begin!\n", name);
-    return name;
+
+    FILE *f = fopen("save/username.txt", "w");
+    if (!f) {
+        perror("fopen");
+        return false;
+    }
+
+    fprintf(f, "%s\n", name);
+    fclose(f);
+
+    return true;
 }
+
+// Startup entry point for name logic.
+// Displays splash, and asks if user wants to continue/reset.
+// Returns true if a valid name is loaded or set.
+bool intro(void) {
+    print_ascii_screen("assets/splash.txt", "Welcome to the simple Rock-Paper-Scissors Game!\n");
+
+    FILE *username_file = fopen("save/username.txt", "r");
+    if (!username_file) {
+        // File doesn't exist — fresh start
+        return reset_game();
+    }
+
+    char buffer[MAX_NAME_SIZE];
+    if (!fgets(buffer, sizeof(buffer), username_file)) {
+        fclose(username_file);
+        return reset_game();  // File exists but unreadable/empty
+    }
+
+    buffer[strcspn(buffer, "\n")] = '\0';  // remove newline
+    fclose(username_file);
+
+    // Present user with choice
+    printf("Please choose one of the following options:\n");
+    printf(" * Continue (1)\n * Start Again (2)\n * Quit (3) ");
+    char choice = read_stdin();
+
+    if (choice == '1') {
+        return load_saved_username();
+    } else if (choice == '2') {
+        return reset_game();
+    } else {
+        return false;
+    }
+}
+
 
 // Translate int to R/P/S string
 void conversion(int num) {
@@ -83,17 +161,16 @@ int winner(int user, int computer) {
         printf("INVALID INPUT: losing one point\n");
         return -1;
     }
-    if (user == computer) return 0;
-    if ((user == 1 && computer == 3) ||
-        (user == 2 && computer == 1) ||
-        (user == 3 && computer == 2)) {
+    if (user == computer) {
+        return 0;
+    } else if ((user - computer + 3) % 3 == 1) {
         return 1;
     }
     return 2;
 }
 
 // Update and show point winner
-void display_winner(int result, char *name) {
+void display_winner(int result) {
     if (result == 0) {
         printf("This round is a draw!\n");
     } else if (result == 1) {
@@ -108,14 +185,14 @@ void display_winner(int result, char *name) {
 }
 
 // Display current points
-void display_points(char *name) {
+void display_points() {
     assert(name);
     printf(" %s: %d Point%s\n", name, user_points, user_points == 1 ? "" : "s");
     printf(" Computer: %d Point%s\n", computer_points, computer_points == 1 ? "" : "s");
 }
 
 // Round menu
-int round_msg() {
+int round_msg(void) {
     char buffer[64];
     snprintf(buffer, sizeof(buffer), "ROUND %d", round_number);
     print_ascii_screen("assets/round.txt", buffer);
@@ -129,7 +206,7 @@ int round_msg() {
 }
 
 // Save summary to file
-void save_game_summary(const char *player_name, int user_points, int computer_points) {
+void save_game_summary(void) {
     FILE *f = fopen("save/game_history.txt", "a");
     if (!f) {
         perror("fopen");
@@ -140,10 +217,10 @@ void save_game_summary(const char *player_name, int user_points, int computer_po
     time_str[strcspn(time_str, "\n")] = '\0';
 
     fprintf(f, "Date: %s\n", time_str);
-    fprintf(f, "Player: %s\n", player_name);
+    fprintf(f, "Player: %s\n", name);
     fprintf(f, "User Score: %d | Computer Score: %d\n", user_points, computer_points);
     if (user_points > computer_points) {
-        fprintf(f, "Winner: %s\n", player_name);
+        fprintf(f, "Winner: %s\n", name);
     } else if (user_points < computer_points) {
         fprintf(f, "Winner: Computer\n");
     } else {
@@ -151,13 +228,16 @@ void save_game_summary(const char *player_name, int user_points, int computer_po
     }
     fprintf(f, "-------------------------\n");
     fclose(f);
+  
 }
 
 // End-of-game message
-void end_game_msg(char *name) {
+void end_game_msg(void) {
     assert(name);
+
+
     printf("GAME SUMMARY:\n");
-    display_points(name);
+    display_points();
     printf("**********************  WINNER  **********************\n");
     printf("                        ");
     if (user_points == computer_points) {

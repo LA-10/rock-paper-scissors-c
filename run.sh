@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -e  # Stop if any command fails
-
-make clean
+mkdir -p build && cd build
+cmake ..
 make
-./game
+./rock-paper-scissors-c

@@ -1,13 +1,19 @@
+#include <stdbool.h>
+
 #ifndef GAME_H
 #define GAME_H
+
+#define MAX_NAME_SIZE 100
 
 // Global score and round tracking
 extern int user_points;
 extern int computer_points;
 extern int round_number;
 
+extern char *name;
+
 // Displays the splash screen and prompts for the player's name.
-char *intro(void);
+bool intro(void);
 
 // Converts an integer (1-3) to its corresponding move name and prints it.
 void conversion(int num);
@@ -32,13 +38,13 @@ int winner(int user, int computer);
 void print_ascii_screen(const char *filepath, const char *subtitle);
 
 // Displays who won the individual game and updates scores.
-void display_winner(int result, char *name);
+void display_winner(int result);
 
 // Reads input from stdin and returns the first valid digit ('1', '2', '3', '0'), or 'e' if invalid.
 char read_stdin(void);
 
 // Displays the current scores of both player and computer.
-void display_points(char *name);
+void display_points(void);
 
 // Saves a summary of the game to "save/game_history.txt" in append mode.
 // Includes the player name, score, winner, and timestamp.
@@ -46,9 +52,9 @@ void display_points(char *name);
 //   player_name - the name of the user (must be a valid C string)
 //   user_points - the number of points the player scored
 //   computer_points - the number of points the computer scored
-void save_game_summary(const char *player_name, int user_points, int computer_points);
+void save_game_summary(void);
 
 // Displays final summary and winner, and saves game results to file.
-void end_game_msg(char *name);
+void end_game_msg(void);
 
 #endif // GAME_H

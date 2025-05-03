@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "game.h"
 
+
+
 /* How to play the game
     1 - Rock
     2 - Paper
@@ -13,11 +15,18 @@ void bar(void) {
 }
 
 int main() {
+
+    name = malloc(sizeof(char) * MAX_NAME_SIZE); // example: 100
+    if (!name) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
+    
     int num_of_plays = 0;
 
-    char *name = intro();
+    bool res = intro();
 
-    while(1) {
+    while(res) {
         if (num_of_plays % 3 == 0) {
 
             if (num_of_plays == 0) {
@@ -27,7 +36,7 @@ int main() {
                 int result = round_msg();
 
                 if (result == 3) {
-                    save_game_summary(name, user_points, computer_points);
+                    save_game_summary();
                 }
 
                 if (result != 1) {
@@ -54,7 +63,7 @@ int main() {
             
             conversion(user_num);
 
-            display_winner(result, name);
+            display_winner(result);
 
         } else {
             printf("INVALID INPUT: losing one point\n");
@@ -66,7 +75,7 @@ int main() {
         num_of_plays++;
     }
 
-    end_game_msg(name);
+    end_game_msg();
     free(name);
     exit(EXIT_SUCCESS);
 

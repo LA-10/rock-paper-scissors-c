@@ -1,50 +1,62 @@
 # 🗺️ Project Roadmap
 
-This document outlines the planned future development of the Rock-Paper-Scissors project.
+This document outlines the planned development of the Rock-Paper-Scissors C terminal game.
 
 ---
 
 ## ✅ v1.0 (Released)
 
-- Basic Rock-Paper-Scissors terminal game.
-- Random move generation using `/dev/urandom`.
-- Simple rage mechanic (lose point on invalid input).
-- Modular, clean C99 code structure.
+- Basic Rock-Paper-Scissors game logic.
+- Random move generation via `/dev/urandom`.
+- Rage mechanic (lose a point on invalid input).
+- Clean C99 code structure.
 
 ---
 
-## 🚀 Planned for v1.5 (Minor Update)
+## ✅ v1.5 (Released)
 
-- [ ] Save game summary (user/computer points, winner) into a `.txt` file at the end.
-- [ ] Allow user to enter a **custom player name**.
-- [ ] Improve output formatting (clearer round separators, winner messages).
-- [ ] Bug fixes (if any found).
-- [ ] (Optional) Add best-of-3 rounds mode.
+- Save game summaries to `save/game_history.txt`.
+- Player name input and validation.
+- Basic ASCII splash screen.
+- Modular separation of gameplay and I/O logic.
+- Optional round-based format introduced.
+
+---
+
+## ✅ v1.7 (Released)
+
+- Round system formalized (best-of-3 per round).
+- New ASCII art formatting for round headers.
+- Persistent user identity (username stored between runs).
+- Continue / Restart / Quit prompt at launch.
+- Replaced Makefile + run.sh with CMake build system.
+- Improved structure, fixed realloc edge cases, better error handling.
 
 ---
 
 ## 🚀 Planned for v2.0 (Major Update)
 
-- [ ] Implement full "Rounds" system officially.
-- [ ] Prepare tracking for number of games played (to unlock difficulty features later).
-- [ ] Refactor code for easier expansion.
+- Fully track number of rounds won/lost.
+- Prepare for difficulty selection and unlocks.
+- UI improvements in text formatting.
+- Streamline code with reusable components (e.g., `name_manager`, `file_io`).
 
 ---
 
 ## ✨ Future Minor Versions
 
-- v2.1: Difficulty selection (Easy / Medium / Hard).
-- v2.2: Learning-based AI after 10+ games.
-- v2.5: Local multiplayer mode (two players take turns).
+- **v2.1**: Difficulty levels (easy/medium/hard).
+- **v2.2**: AI learns from user choices after 10+ rounds.
+- **v2.5**: Local multiplayer support.
 
 ---
 
 ## ✨ Future Major Version
 
-- v3.0: GUI Version (Simple graphical interface using SDL2 or Nuklear).
+- **v3.0**: GUI implementation using SDL2 or Nuklear.
 
 ---
 
-# 📅 Last Updated
+## 📅 Last Updated
 
 April 29, 2025
