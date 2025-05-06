@@ -56,6 +56,3 @@ This document outlines the planned development of the Rock-Paper-Scissors C term
 
 ---
 
-## 📅 Last Updated
-
-April 29, 2025
