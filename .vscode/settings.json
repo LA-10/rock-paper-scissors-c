@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "stdio.h": "c",
-        "players.h": "c",
-        "file_io.h": "c",
-        "string.h": "c",
-        "unistd.h": "c"
-    }
-}
