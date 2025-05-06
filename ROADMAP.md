@@ -34,18 +34,17 @@ This document outlines the planned development of the Rock-Paper-Scissors C term
 
 ---
 
-## 🚀 Planned for v2.0 (Major Update)
+## ✅ v2.0 (Released)
 
 - Fully track number of rounds won/lost.
 - Prepare for difficulty selection and unlocks.
 - UI improvements in text formatting.
 - Streamline code with reusable components (e.g., `name_manager`, `file_io`).
-
----
+- Improved structure, fixed memory leaks, better error handling.
+- Difficulty levels (easy/medium/difficult).
 
 ## ✨ Future Minor Versions
 
-- **v2.1**: Difficulty levels (easy/medium/hard).
 - **v2.2**: AI learns from user choices after 10+ rounds.
 - **v2.5**: Local multiplayer support.
 

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "game.h"
+#include "file_io.h"
 
 
 
@@ -15,16 +15,10 @@ void bar(void) {
 }
 
 int main() {
-
-    name = malloc(sizeof(char) * MAX_NAME_SIZE); // example: 100
-    if (!name) {
-        perror("malloc");
-        exit(EXIT_FAILURE);
-    }
     
     int num_of_plays = 0;
 
-    bool res = intro();
+    play_fn res = intro();
 
     while(res) {
         if (num_of_plays % 3 == 0) {
@@ -49,10 +43,10 @@ int main() {
 
         if (user_points < 0 || user == '0') {
             break;
-        }
+        } 
 
         if (user == '1' || user == '2' || user == '3') {
-            int comp = computer();
+            int comp = res();
 
             int user_num = user - '0';
 
@@ -71,12 +65,12 @@ int main() {
             
         }
 
+        
         bar();
         num_of_plays++;
     }
 
     end_game_msg();
-    free(name);
     exit(EXIT_SUCCESS);
 
 }

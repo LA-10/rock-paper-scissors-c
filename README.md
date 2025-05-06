@@ -16,6 +16,7 @@ A terminal-based Rock-Paper-Scissors game written in clean, modular C99. Designe
 - Username persistence (saved and reloaded from file)
 - Rewritten with **CMake** instead of Makefiles for building
 - Modular codebase split into `main`, `game`, and `players` logic
+- Added the ability to choose the game difficultly (easy, medium, difficult)
 
 ---
 

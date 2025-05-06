@@ -5,24 +5,39 @@
 
 #define MAX_NAME_SIZE 100
 
+typedef int (*play_fn)(void);
+
 // Global score and round tracking
 extern int user_points;
 extern int computer_points;
 extern int round_number;
 
-extern char *name;
+extern char name[MAX_NAME_SIZE];
 
 // Displays the splash screen and prompts for the player's name.
-bool intro(void);
+play_fn intro(void);
+
+// Generates a random move for the computer between 1 and 3 using /dev/urandom.
+// Also prints the move to the console.
+int computer(void);
+
+// Prompts the user for a move input and returns a char corresponding to:
+// '1' for Rock, '2' for Paper, '3' for Scissors, or '0' to exit.
+char play(void);
 
 // Converts an integer (1-3) to its corresponding move name and prints it.
 void conversion(int num);
 
-// Prompts the player to make a move and returns their choice.
-char play(void);
+// Generates a random move in a more non-intelligent way
+int easy_play(void);
 
 // Generates a random move for the computer (1-3).
-int computer(void);
+int medium_play(void);
+
+
+// A more intelligence implementation of medium play that learns player behavior
+// requires: round_number > 10
+int difficult_play(void);
 
 // Displays the round number using ASCII art and asks the player to continue or exit.
 int round_msg(void);

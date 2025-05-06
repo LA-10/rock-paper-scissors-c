@@ -4,8 +4,11 @@
 #include <string.h> 
 #include <time.h>
 #include <stdbool.h>
-#include "players.h"
-#include "game.h"
+#include "name_manager.h"
+#include "file_io.h"
+#include <fcntl.h>
+#include <unistd.h>
+
 
 /*
     How to play the game:
@@ -19,7 +22,7 @@ int user_points = 0;
 int computer_points = 0;
 int round_number = 1;
 
-char *name;
+char name[MAX_NAME_SIZE];
 
 // Input Utilities
 char read_stdin(void) {
@@ -54,45 +57,18 @@ void print_ascii_screen(const char *filepath, const char *subtitle) {
     }
 }
 
-// Loads the saved username into the global `name` buffer.
-// Returns true on success, false otherwise.
-static bool load_saved_username(void) {
-    FILE *username_file = fopen("save/username.txt", "r");
-    if (!username_file) {
-        perror("fopen");
-        return false;
-    }
-
-    char buffer[MAX_NAME_SIZE];
-    if (!fgets(buffer, sizeof(buffer), username_file)) {
-        printf("Could not read username.\n");
-        fclose(username_file);
-        return false;
-    }
-
-    buffer[strcspn(buffer, "\n")] = '\0';  // remove newline
-
-    if (strlen(buffer) + 1 > MAX_NAME_SIZE) {
-        printf("Username is too long.\n");
-        fclose(username_file);
-        return false;
-    }
-
-    strcpy(name, buffer);  // safe copy into pre-allocated buffer
-
-    fclose(username_file);
-    return true;
-}
 
 // Prompts the user for a new username, saves it, and resets game history.
 // Returns true on success.
 static bool reset_game(void) {
     remove("save/username.txt");
     remove("save/game_history.txt");
+    remove("save/game_moves.txt");
+
 
     int rename_tries = 0;
     printf("Write your name: ");
-    read_str(rename_tries, name, MAX_NAME_SIZE);
+    read_str();
 
     printf("Welcome %s to the game! Let's begin!\n", name);
 
@@ -108,40 +84,63 @@ static bool reset_game(void) {
     return true;
 }
 
+
+
 // Startup entry point for name logic.
 // Displays splash, and asks if user wants to continue/reset.
 // Returns true if a valid name is loaded or set.
-bool intro(void) {
+play_fn intro(void) {
     print_ascii_screen("assets/splash.txt", "Welcome to the simple Rock-Paper-Scissors Game!\n");
 
     FILE *username_file = fopen("save/username.txt", "r");
     if (!username_file) {
-        // File doesn't exist — fresh start
-        return reset_game();
+        reset_game();
+        return medium_play;  // Don't exit abruptly
     }
 
-    char buffer[MAX_NAME_SIZE];
+    char buffer[MAX_NAME_SIZE] = {0};
     if (!fgets(buffer, sizeof(buffer), username_file)) {
         fclose(username_file);
-        return reset_game();  // File exists but unreadable/empty
+        reset_game();
+        return medium_play;
     }
 
-    buffer[strcspn(buffer, "\n")] = '\0';  // remove newline
+    buffer[strcspn(buffer, "\n")] = '\0';  // remove trailing newline
     fclose(username_file);
 
-    // Present user with choice
+    // Ask user whether to continue or start over
     printf("Please choose one of the following options:\n");
     printf(" * Continue (1)\n * Start Again (2)\n * Quit (3) ");
     char choice = read_stdin();
 
     if (choice == '1') {
-        return load_saved_username();
+        load_saved_username();
     } else if (choice == '2') {
-        return reset_game();
+        reset_game();
     } else {
-        return false;
+        return false;  // Quit
     }
+
+    // Difficulty selection
+    printf("Please choose one of the following options:\n");
+    if (round_number > 10) {
+        printf(" * Difficult (1)\n * Medium (2)\n * Easy (3) ");
+        choice = read_stdin();
+        if (choice == '1') return difficult_play;
+        if (choice == '2') return medium_play;
+        if (choice == '3') return easy_play;
+    } else {
+        printf(" * Difficult (Locked)\n * Medium (2)\n * Easy (3) ");
+        choice = read_stdin();
+        if (choice == '2') return medium_play;
+        if (choice == '3') return easy_play;
+    }
+
+    printf("Invalid choice, proceeding with medium level\n");
+
+    return medium_play;  // default fallback
 }
+
 
 
 // Translate int to R/P/S string
@@ -157,7 +156,21 @@ void conversion(int num) {
 
 // Game logic: decide winner
 int winner(int user, int computer) {
+    FILE *f = fopen("save/game_moves.txt", "a");
+
+    if (!f) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(f, "%s: %d\n", name, user);
+    fprintf(f, "Computer: %d\n", computer);
+
+
+    fclose(f);
+
     if (user > 3 || user <= 0) {
+
         printf("INVALID INPUT: losing one point\n");
         return -1;
     }
@@ -166,6 +179,8 @@ int winner(int user, int computer) {
     } else if ((user - computer + 3) % 3 == 1) {
         return 1;
     }
+
+
     return 2;
 }
 
@@ -184,6 +199,63 @@ void display_winner(int result) {
     }
 }
 
+// Prompts user to play and returns the move choice
+char play(void) {
+    printf("Type the following number:\n* Rock (1)\n* Paper (2)\n* Scissors (3)\n* Exit (0) ");
+    char user = read_stdin();
+    return user;
+}
+
+int easy_play(void) {
+    int num = rand() % 6 + 1;
+
+    if (num % 3 == 0) {
+        return 3;
+    } else if (num % 2 == 0) {
+        return 2;
+    } else {
+        return 1;
+    }
+}
+
+// Generates and returns a random computer move between 1 and 3
+int medium_play(void) {
+    int min = 1;
+    int max = 3;
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    int rd_num;
+    int bytes_read = read(fd, &rd_num, sizeof(rd_num));
+    if (bytes_read != sizeof(rd_num)) {
+        perror("read");
+        close(fd);
+        exit(EXIT_FAILURE);
+    }
+    close(fd);
+
+    rd_num = rd_num % (max - min + 1) + min;
+    printf("Computer played ");
+    conversion(rd_num);
+
+    if (rd_num % 3 == 0) {
+        return 3;
+    } else if (rd_num % 2 == 0) {
+        return 2;
+    } else {
+        return 1;
+    }
+}
+
+int difficult_play(void) {
+    printf("no function code implemented yet\n");
+
+    return 1;
+}
+
 // Display current points
 void display_points() {
     assert(name);
@@ -193,8 +265,20 @@ void display_points() {
 
 // Round menu
 int round_msg(void) {
+    FILE *f = fopen("save/game_moves.txt", "a");
+
+    fprintf(f, "========================================\n");
+    if (!f) {
+        perror("fopen");
+        return -1;
+    }
+
+    fprintf(f, "ROUND %d\n", round_number);
+    fclose(f);
+  
     char buffer[64];
     snprintf(buffer, sizeof(buffer), "ROUND %d", round_number);
+
     print_ascii_screen("assets/round.txt", buffer);
     round_number++;
     printf("Please choose one of the following options:\n");
@@ -233,8 +317,17 @@ void save_game_summary(void) {
 
 // End-of-game message
 void end_game_msg(void) {
-    assert(name);
 
+    FILE *f = fopen("save/round_number.txt", "a");
+
+    if (!f) {
+        perror("fopen");
+        return;
+    }
+
+    fprintf(f, "%d", round_number);
+
+    fclose(f);
 
     printf("GAME SUMMARY:\n");
     display_points();
