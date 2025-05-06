@@ -1,4 +1,4 @@
-# 🪨 Rock Paper Scissors - C Version ![version](https://img.shields.io/badge/version-1.7-blue) 
+# 🪨 Rock Paper Scissors - C Version ![version](https://img.shields.io/badge/version-2.0-blue) 
 
 A terminal-based Rock-Paper-Scissors game written in clean, modular C99. Designed for simplicity, learning, and extensibility.
 
