@@ -24,8 +24,12 @@ int main() {
         if (num_of_plays % 3 == 0) {
 
             if (num_of_plays == 0) {
-                print_ascii_screen("assets/round.txt", "ROUND 1");
+
+                char buffer[64];
+                snprintf(buffer, sizeof(buffer), "ROUND %d", round_number);
+
                 round_number++;
+                print_ascii_screen("assets/round.txt", buffer);
             } else {
                 int result = round_msg();
 
@@ -37,8 +41,8 @@ int main() {
                     break;
                 }
             }
-        }
 
+        } 
         char user = play();
 
         if (user_points < 0 || user == '0') {
@@ -56,6 +60,9 @@ int main() {
 
             
             conversion(user_num);
+
+            printf("Computer played ");
+            conversion(comp);
 
             display_winner(result);
 

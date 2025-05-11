@@ -35,6 +35,9 @@ cmake --build build
 ./build/rock-paper-scissors-c
 ```
 
+# Build with run.sh
+./run.sh
+
 ---
 
 ## 📂 Directory Structure

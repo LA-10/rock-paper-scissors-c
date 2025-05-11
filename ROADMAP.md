@@ -42,13 +42,7 @@ This document outlines the planned development of the Rock-Paper-Scissors C term
 - Streamline code with reusable components (e.g., `name_manager`, `file_io`).
 - Improved structure, fixed memory leaks, better error handling.
 - Difficulty levels (easy/medium/difficult).
-
-## ✨ Future Minor Versions
-
-- **v2.2**: AI learns from user choices after 10+ rounds.
-- **v2.5**: Local multiplayer support.
-
----
+- AI learns from user choices after 10+ rounds.
 
 ## ✨ Future Major Version
 

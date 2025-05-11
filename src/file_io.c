@@ -8,6 +8,7 @@
 #include "file_io.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include <Python.h>
 
 
 /*
@@ -64,6 +65,9 @@ static bool reset_game(void) {
     remove("save/username.txt");
     remove("save/game_history.txt");
     remove("save/game_moves.txt");
+    remove("save/round_number.txt");
+
+    round_number = 1;
 
 
     int rename_tries = 0;
@@ -84,12 +88,33 @@ static bool reset_game(void) {
     return true;
 }
 
+static int get_round_number() {
+    FILE *f_rnd = fopen("save/round_number.txt", "r");
+    if (!f_rnd) {
+        // If file cannot be opened, reset the game
+        reset_game();
+        return -1;
+    }
+
+    // Try reading the round number as an integer
+    if (fscanf(f_rnd, "%d", &round_number) != 1) {
+        // If the round number cannot be read, reset the game
+        fclose(f_rnd);
+        reset_game();
+        return -1;
+    }
+
+    fclose(f_rnd);
+    
+    return 0;  // Successfully read the round number
+}
 
 
 // Startup entry point for name logic.
 // Displays splash, and asks if user wants to continue/reset.
 // Returns true if a valid name is loaded or set.
 play_fn intro(void) {
+    get_round_number();
     print_ascii_screen("assets/splash.txt", "Welcome to the simple Rock-Paper-Scissors Game!\n");
 
     FILE *username_file = fopen("save/username.txt", "r");
@@ -175,13 +200,13 @@ int winner(int user, int computer) {
         return -1;
     }
     if (user == computer) {
-        return 0;
+        return 0; // draw
     } else if ((user - computer + 3) % 3 == 1) {
-        return 1;
+        return 1; // user won
     }
 
 
-    return 2;
+    return 2; // computer won
 }
 
 // Update and show point winner
@@ -205,6 +230,7 @@ char play(void) {
     char user = read_stdin();
     return user;
 }
+
 
 int easy_play(void) {
     int num = rand() % 6 + 1;
@@ -238,8 +264,6 @@ int medium_play(void) {
     close(fd);
 
     rd_num = rd_num % (max - min + 1) + min;
-    printf("Computer played ");
-    conversion(rd_num);
 
     if (rd_num % 3 == 0) {
         return 3;
@@ -251,10 +275,52 @@ int medium_play(void) {
 }
 
 int difficult_play(void) {
-    printf("no function code implemented yet\n");
+    Py_Initialize();
+    // Set the Python path to the current directory (where ai_model.py is located)
+    PyRun_SimpleString("import sys\n"
+        "sys.path.append('/Users/leen/Desktop/programming/C/rock-paper-scessiors/rock-paper-scissors-c/src/');");
 
-    return 1;
+    // Now you can import your Python file
+    PyObject *pModule = PyImport_ImportModule("ai_model");  // Import ai_model
+    if (!pModule) {
+        PyErr_Print();
+        return -1;
+    }
+
+        
+    // Get the predict_next_move function
+    PyObject *pFunc = PyObject_GetAttrString(pModule, "q_learning_predict");
+    if (!pFunc || !PyCallable_Check(pFunc)) {
+        PyErr_Print();
+        fprintf(stderr, "Function predict_next_move not found or not callable\n");
+        Py_XDECREF(pFunc);
+        Py_DECREF(pModule);
+        Py_Finalize();
+        return 1;
+    }
+    
+    // Call the function
+    PyObject *pValue = PyObject_CallObject(pFunc, NULL);
+    int result = 1;  // fallback move
+    
+    if (pValue != NULL) {
+        result = (int)PyLong_AsLong(pValue);
+        Py_DECREF(pValue);
+    } else {
+        PyErr_Print();
+        fprintf(stderr, "Call to predict_next_move failed\n");
+    }
+    
+    // Cleanup
+    Py_XDECREF(pFunc);
+    Py_DECREF(pModule);
+    Py_Finalize();
+
+    printf("result is %d\n", result);
+    
+    return result;    
 }
+
 
 // Display current points
 void display_points() {
@@ -262,6 +328,7 @@ void display_points() {
     printf(" %s: %d Point%s\n", name, user_points, user_points == 1 ? "" : "s");
     printf(" Computer: %d Point%s\n", computer_points, computer_points == 1 ? "" : "s");
 }
+
 
 // Round menu
 int round_msg(void) {
@@ -286,6 +353,7 @@ int round_msg(void) {
     char input = read_stdin();
     if (input == '2') return 2;
     if (input == '3') return 3;
+
     return 1;
 }
 
@@ -317,6 +385,8 @@ void save_game_summary(void) {
 
 // End-of-game message
 void end_game_msg(void) {
+
+    remove("save/round_number.txt");
 
     FILE *f = fopen("save/round_number.txt", "a");
 
